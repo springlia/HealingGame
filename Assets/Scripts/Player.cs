@@ -13,6 +13,8 @@ public class Player : MonoBehaviour
     bool isNowFishing = false;
     bool isFishingZone = false;
     [SerializeField] GameObject fishingRod;
+    float fishWaitTime;
+
 
     //애니메이션
     [SerializeField] Sprite[] sprites;
@@ -39,10 +41,14 @@ public class Player : MonoBehaviour
             fishingRod.SetActive(true);
             isNowFishing = true;
             sr.sprite = sprites[4];
+  
+            fishWaitTime = Random.RandomRange(2f, 10f);
+            StartCoroutine(WaitFish());
         }
         else if (Input.GetKeyDown(KeyCode.Space) && isFishingZone && isNowFishing)
         {
             Debug.Log("낚시 종료");
+            StopCoroutine(WaitFish());
             fishingRod.SetActive(false);
             isNowFishing = false;
             sr.sprite = sprites[0];
@@ -56,7 +62,6 @@ public class Player : MonoBehaviour
 
         this.transform.position += dir * speed * Time.deltaTime;
     }
-
     void PlayerLook()
     {
         if (Input.GetKeyDown(KeyCode.W)) //위
@@ -75,6 +80,12 @@ public class Player : MonoBehaviour
         {
             sr.sprite = sprites[1];
         }
+    }
+
+    IEnumerator WaitFish()
+    {
+        yield return new WaitForSeconds(fishWaitTime);
+        Debug.Log("잡혔다!");
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
