@@ -20,7 +20,8 @@ public class Player : MonoBehaviour
     [SerializeField] Sprite[] sprites;
     [SerializeField] AnimationClip[] ani;
     SpriteRenderer sr;
-   
+
+    Coroutine coru;
     private void Start()
     {
         sr = GetComponent<SpriteRenderer>();
@@ -38,17 +39,19 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && isFishingZone && !isNowFishing) 
         {
             Debug.Log("≥¨Ω√ Ω√¿€");
+            
+
             fishingRod.SetActive(true);
+
             isNowFishing = true;
             sr.sprite = sprites[4];
   
-            fishWaitTime = Random.RandomRange(2f, 10f);
-            StartCoroutine(WaitFish());
+            coru = StartCoroutine(WaitFish());
         }
         else if (Input.GetKeyDown(KeyCode.Space) && isFishingZone && isNowFishing)
         {
             Debug.Log("≥¨Ω√ ¡æ∑·");
-            StopCoroutine(WaitFish());
+            StopCoroutine(coru);
             fishingRod.SetActive(false);
             isNowFishing = false;
             sr.sprite = sprites[0];
@@ -84,7 +87,8 @@ public class Player : MonoBehaviour
 
     IEnumerator WaitFish()
     {
-        yield return new WaitForSeconds(fishWaitTime);
+        yield return new WaitForSeconds(Random.Range(2f, 10f));
+        GameManager.Instance.StartFishGame();
         Debug.Log("¿‚«˚¥Ÿ!");
     }
 
