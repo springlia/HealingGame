@@ -38,9 +38,6 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && isFishingZone && !isNowFishing) 
         {
-            Debug.Log("≥¨Ω√ Ω√¿€");
-            
-
             fishingRod.SetActive(true);
 
             isNowFishing = true;
@@ -50,7 +47,6 @@ public class Player : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.Space) && isFishingZone && isNowFishing)
         {
-            Debug.Log("≥¨Ω√ ¡æ∑·");
             StopCoroutine(coru);
             fishingRod.SetActive(false);
             isNowFishing = false;
@@ -89,14 +85,13 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(Random.Range(2f, 10f));
         GameManager.Instance.StartFishGame();
-        Debug.Log("¿‚«˚¥Ÿ!");
+        
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("CanFishing"))
         {
-            Debug.Log("≥¨Ω√ ∞°¥…");
             isFishingZone = true;
         } 
     }
@@ -105,7 +100,6 @@ public class Player : MonoBehaviour
     {
         if (collision.CompareTag("CanFishing"))
         {
-            Debug.Log("≥¨Ω√ ∫“∞°¥…");
             isFishingZone = false;
         }
     }
