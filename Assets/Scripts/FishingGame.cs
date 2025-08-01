@@ -17,8 +17,8 @@ public class FishingGame : MonoBehaviour
     Fish caughtFish;
 
     //물고기 데이터 가져오기
-    [SerializeField] private List<FishData> fishDatas;
-    [SerializeField] private GameObject fishPrefab;
+    //[SerializeField] private List<FishData> fishDatas;
+    //[SerializeField] private GameObject fishPrefab;
 
 
 
@@ -28,9 +28,9 @@ public class FishingGame : MonoBehaviour
         RandomSpawnTarget();
 
 
-        //randomSize = Random.Range(caughtFish.minSize,caughtFish.maxSize);
-        //Debug.Log($"물고기 이름: {caughtFish.name}, 사이즈: {randomSize.ToString("N2")}, 난이도: {caughtFish.difficulty}, 가격: {caughtFish.price}");
-        //fishMoveSpeed = 500 * caughtFish.difficulty + Random.Range(1,100);
+        randomSize = Random.Range(caughtFish.minSize, caughtFish.maxSize);
+        Debug.Log($"물고기 이름: {caughtFish.name}, 사이즈: {randomSize.ToString("N2")}, 난이도: {caughtFish.difficulty}, 가격: {caughtFish.price}");
+        fishMoveSpeed = 500 * caughtFish.difficulty + Random.Range(1, 100);
         //물고기 스피드 공식 = 500 * 물고기 난이도 + 랜덤값 (1~100)
     }
 
@@ -52,7 +52,7 @@ public class FishingGame : MonoBehaviour
             if (canCatch)
             {
                 GameManager.Instance.WriteLog($"{caughtFish.name}({randomSize.ToString("N2")}cm)을(를) 잡았다!");
-
+                GameManager.Instance.AddToInventory(caughtFish);
             }
             else
             {
