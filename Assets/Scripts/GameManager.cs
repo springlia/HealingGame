@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
 
     //물고기
     public List<Fish> fishs = new List<Fish>();
-    public Sprite temp;
+
     //인벤토리
     //public List<Inventory> inventory = new List<Inventory>();
     public List<InventoryItem> inventory = new List<InventoryItem>();
@@ -96,8 +96,8 @@ public class GameManager : MonoBehaviour
         {
             if (i < inventory.Count)
             {
-                //prite fishIcon = GetFishIcon(inventory[i].fishData.name); // 구현 필요
-                slotUIs[i].AddItem(temp, inventory[i].count);
+                Sprite fishIcon = GetFishIcon(inventory[i].fishData.name);
+                slotUIs[i].AddItem(fishIcon, inventory[i].count);
             }
             else
             {
@@ -105,10 +105,10 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    //public Sprite GetFishIcon(string fishName)
-    //{
-    //    return Resources.Load<Sprite>($"FishIcons/{fishName}"); // Resources/FishIcons 폴더에 저장된 스프라이트 필요
-    //}
+    public Sprite GetFishIcon(string fishName)
+    {
+        return Resources.Load<Sprite>($"FishIcons/{fishName}"); // Resources/FishIcons 폴더에 저장
+    }
 
     //void GetItem(string item, int count)
     //{

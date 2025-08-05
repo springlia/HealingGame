@@ -20,8 +20,6 @@ public class FishingGame : MonoBehaviour
     //[SerializeField] private List<FishData> fishDatas;
     //[SerializeField] private GameObject fishPrefab;
 
-
-
     private void OnEnable()
     {
         caughtFish = GameManager.Instance.GetRandomFish();

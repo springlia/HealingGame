@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,8 +13,7 @@ public class InventorySlot : MonoBehaviour
     
     public void AddItem(Sprite sprite, int count)
     {
-        Debug.Log($"AddItem »£√‚µ : count = {count}");
-        icon.sprite = GameManager.Instance.temp;
+        icon.sprite = sprite;
         icon.enabled = true;
         countText.text = countText.text = count.ToString();
     }
@@ -24,6 +24,5 @@ public class InventorySlot : MonoBehaviour
         icon.enabled = false;
         countText.text = "";
     }
-
 
 }
