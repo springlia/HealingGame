@@ -92,12 +92,55 @@ public class Player : MonoBehaviour
                 }
                 else if (groundTilemap.GetTile(currentPos) == farmTiles[2]) //물이 있는 상태일때 (씨앗 뿌리기)
                 {
-                    groundTilemap.BoxFill(currentPos, farmTiles[3], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
-                    StartCoroutine(GrowCrop(currentPos));
+                    //씨앗이 인벤토리에 있는지
+                    InventoryItem seed = null;
+                    foreach (InventoryItem item in GameManager.Instance.inventory)
+                    {
+                        if (item.cropData.name == "씨앗")
+                        {
+                            seed = item;
+                            break;
+                        }
+                    }
+
+                    //씨앗이 있으면
+                    if (seed != null && seed.count > 0)
+                    {
+                        groundTilemap.BoxFill(currentPos, farmTiles[3], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
+                        StartCoroutine(GrowCrop(currentPos));
+
+                        // 씨앗 1개 차감
+                        seed.count--;
+                        if (seed.count == 0)
+                        {
+                            GameManager.Instance.inventory.Remove(seed);
+                        }
+
+                        GameManager.Instance.UpdateInventoryUI();
+                    }
+                    //없으면
+                    else
+                    {
+                        GameManager.Instance.WriteLog("씨앗이 부족합니다.");
+                    }
+
+                    
                 }
                 else if (groundTilemap.GetTile(currentPos) == farmTiles[7]) //다 자란 상태일때 (수확하기)
                 {
                     groundTilemap.BoxFill(currentPos, farmTiles[0], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
+                    GameManager.Instance.WriteLog("토마토를 수확했다!");
+                    Crop tomato = null;
+                    foreach (Crop crop in GameManager.Instance.crops)
+                    {
+                        if (crop.name == "토마토")
+                        {
+                            tomato = crop;
+                            break;
+                        }
+                    }
+                    GameManager.Instance.AddToInventory(tomato);
+
                 }
             }
             //상점 이동
@@ -176,8 +219,22 @@ public class Player : MonoBehaviour
         }
         else if (collision.CompareTag("Shop"))
         {
-            isShopTile = true;
+            if (collision.name == "Teleport")
+            {
+                isShopTile = true;
+            }
+            else if (collision.name == "Buy")
+            {
+                Debug.Log("test");
+                GameManager.Instance.OpenShop("Buy");
+            }
+            else if (collision.name == "Sell")
+            {
+                GameManager.Instance.OpenShop("Sell");
+            }
+                
         }
+
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -192,7 +249,8 @@ public class Player : MonoBehaviour
         }
         else if (collision.CompareTag("Shop"))
         {
-            isShopTile = false;
+            if (collision.name == "Teleport")
+                isShopTile = false;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class Fish
@@ -12,18 +13,21 @@ public class Fish
     public float price;
     public float minSize;
     public float maxSize;
+    public string lore;
 }
-// https://wergia.tistory.com/189
 
-//public class Inventory
-//{
-//    public string name;
-//    public int count;
-//}
+public class Crop
+{
+    public string name;
+    public float price;
+    public string lore;
+}
+
 [System.Serializable]
 public class InventoryItem
 {
     public Fish fishData;
+    public Crop cropData;
     public int count;
 }
 
@@ -32,11 +36,11 @@ public class GameManager : MonoBehaviour
     //싱글톤
     public static GameManager Instance { get; private set; }
 
-    //물고기
+    //아이템
     public List<Fish> fishs = new List<Fish>();
+    public List<Crop> crops = new List<Crop>();
 
     //인벤토리
-    //public List<Inventory> inventory = new List<Inventory>();
     public List<InventoryItem> inventory = new List<InventoryItem>();
     [SerializeField] GameObject inventoryPanel;
     [SerializeField] GameObject inventorySlotPrefab;
@@ -44,18 +48,28 @@ public class GameManager : MonoBehaviour
     private List<InventorySlot> slotUIs = new List<InventorySlot>();
     const int InventorySize = 36;
 
+    public Image itemInfoImage;
+    public TextMeshProUGUI itemInfoNameText;
+    public TextMeshProUGUI itemInfoLoreText;
 
     //UI
     [SerializeField] GameObject invUI;
     [SerializeField] GameObject fishGameUI;
     [SerializeField] TextMeshProUGUI logText;
 
+    //상점
+    [SerializeField] GameObject sellButton;
+    private InventoryItem selectedItem = null;
+
+    public float money = 0;
+    [SerializeField] TextMeshProUGUI moneyText;
 
     private void Awake()
     {
         Instance = this;
 
         AddFish();
+        AddCrop();
     }
 
     private void Start()
@@ -65,7 +79,45 @@ public class GameManager : MonoBehaviour
             GameObject slotObj = Instantiate(inventorySlotPrefab, inventoryPanel.transform);
             slotUIs.Add(slotObj.GetComponent<InventorySlot>());
         }
+
+        //씨앗 1개 지급
+        Crop seed = null;
+        foreach (Crop crop in GameManager.Instance.crops)
+        {
+            if (crop.name == "씨앗")
+            {
+                seed = crop;
+                break;
+            }
+        }
+        AddToInventory(seed);
     }
+
+    //인벤토리 아이템 추가 (농사류)
+    public void AddToInventory(Crop crop)
+    {
+        foreach (var item in inventory)
+        {
+            if (item.cropData != null && item.cropData.name == crop.name)
+            {
+                item.count++;
+                UpdateInventoryUI();
+                return;
+            }
+        }
+
+        if (inventory.Count < InventorySize)
+        {
+            inventory.Add(new InventoryItem { cropData = crop, count = 1 });
+            UpdateInventoryUI();
+        }
+        else
+        {
+            WriteLog("인벤토리가 가득 찼습니다.");
+        }
+    }
+
+    //인벤토리 아이템 추가 (낚시류)
     public void AddToInventory(Fish fish)
     {
         // 이미 있는 항목이면 수량만 증가
@@ -90,14 +142,26 @@ public class GameManager : MonoBehaviour
             WriteLog("인벤토리가 가득 찼습니다.");
         }
     }
-    void UpdateInventoryUI()
+    public void UpdateInventoryUI()
     {
         for (int i = 0; i < slotUIs.Count; i++)
         {
             if (i < inventory.Count)
             {
-                Sprite fishIcon = GetFishIcon(inventory[i].fishData.name);
-                slotUIs[i].AddItem(fishIcon, inventory[i].count);
+                Sprite itemIcon = null;
+                string name = "";
+
+                if (inventory[i].fishData != null)
+                {
+                    name = inventory[i].fishData.name;
+                }
+                else if (inventory[i].cropData != null)
+                {
+                    name = inventory[i].cropData.name;
+                }
+
+                itemIcon = GetItemIcon(name);
+                slotUIs[i].AddItem(itemIcon, inventory[i].count, inventory[i]);
             }
             else
             {
@@ -105,39 +169,42 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    public Sprite GetFishIcon(string fishName)
+    public Sprite GetItemIcon(string name)
     {
-        return Resources.Load<Sprite>($"FishIcons/{fishName}"); // Resources/FishIcons 폴더에 저장
+        return Resources.Load<Sprite>($"Icons/{name}"); // Resources/Icons 폴더에 저장
     }
 
-    //void GetItem(string item, int count)
-    //{
-    //    inventory.Add(new Inventory { name = item, count = count });
-    //}
+
+    void AddCrop()
+    {
+        crops.Add(new Crop { name = "씨앗", price = 5.0f, lore = "이렇게 작은 씨앗이 어떻게 자라날까요?" });
+        crops.Add(new Crop { name = "토마토", price = 35.0f, lore = "달콤하면서도 새콤한 맛이 조화를 이루는 인기 만점의 채소." });
+    }
 
     void AddFish()
     {
-        fishs.Add(new Fish { name = "고등어", difficulty = 2, price = 13.0f, minSize = 60, maxSize = 168 });
-        fishs.Add(new Fish { name = "연어", difficulty = 2, price = 15.0f, minSize = 60, maxSize = 168 });
-        fishs.Add(new Fish { name = "복어", difficulty = 3, price = 30.0f, minSize = 3, maxSize = 94 });
-        fishs.Add(new Fish { name = "참치", difficulty = 2, price = 15.0f, minSize = 30, maxSize = 155 });
-        fishs.Add(new Fish { name = "도미", difficulty = 1, price = 9.0f, minSize = 30, maxSize = 79 });
-        fishs.Add(new Fish { name = "해삼", difficulty = 3, price = 35.0f, minSize = 8, maxSize = 53 });
-        fishs.Add(new Fish { name = "청어", difficulty = 2, price = 20.0f, minSize = 20, maxSize = 53 });
-        fishs.Add(new Fish { name = "숭어", difficulty = 1, price = 10.0f, minSize = 20, maxSize = 58 });
-        fishs.Add(new Fish { name = "장어", difficulty = 3, price = 35.0f, minSize = 30, maxSize = 206 });
-        fishs.Add(new Fish { name = "문어", difficulty = 4, price = 30.0f, minSize = 30, maxSize = 124 });
-        fishs.Add(new Fish { name = "붉은 퉁돔", difficulty = 1, price = 9.0f, minSize = 20, maxSize = 66 });
-        fishs.Add(new Fish { name = "오징어", difficulty = 4, price = 30.0f, minSize = 30, maxSize = 124 });
-        fishs.Add(new Fish { name = "멸치", difficulty = 1, price = 6.0f, minSize = 3, maxSize = 43 });
-        fishs.Add(new Fish { name = "정어리", difficulty = 1, price = 8.0f, minSize = 3, maxSize = 33 });
-        fishs.Add(new Fish { name = "바닷가재", difficulty = 1, price = 5.0f, minSize = 3, maxSize = 20 });
-        fishs.Add(new Fish { name = "날개다랑어", difficulty = 1, price = 10.0f, minSize = 51, maxSize = 104 });
-        fishs.Add(new Fish { name = "조개", difficulty = 1, price = 3.0f, minSize = 2, maxSize = 5 });
-        fishs.Add(new Fish { name = "쓰레기", difficulty = 1, price = 0.0f, minSize = 1, maxSize = 5 });
-        fishs.Add(new Fish { name = "해초", difficulty = 1, price = 1.0f, minSize = 1, maxSize = 5 });
-        fishs.Add(new Fish { name = "전설의 물고기", difficulty = 5, price = 50.0f, minSize = 10, maxSize = 50 });
+        fishs.Add(new Fish { name = "고등어", difficulty = 2, price = 13.0f, minSize = 60, maxSize = 168, lore = "바다를 빠르게 헤엄치는 고단백 생선." });
+        fishs.Add(new Fish { name = "연어", difficulty = 2, price = 15.0f, minSize = 60, maxSize = 168, lore = "강에서 바다로, 다시 강으로 돌아오는 강인한 여정의 주인공." });
+        fishs.Add(new Fish { name = "복어", difficulty = 3, price = 30.0f, minSize = 3, maxSize = 94, lore = "맹독을 지닌 신비로운 생선, 신중히 다뤄야 한다." });
+        fishs.Add(new Fish { name = "참치", difficulty = 2, price = 15.0f, minSize = 30, maxSize = 155, lore = "넓은 바다를 누비는 강력한 사냥꾼." });
+        fishs.Add(new Fish { name = "도미", difficulty = 1, price = 9.0f, minSize = 30, maxSize = 79, lore = "고급 요리에 자주 쓰이는 맛좋은 생선." });
+        fishs.Add(new Fish { name = "해삼", difficulty = 3, price = 35.0f, minSize = 8, maxSize = 53, lore = "바다 밑바닥의 청소부, 영양가 높은 식재료." });
+        fishs.Add(new Fish { name = "청어", difficulty = 2, price = 20.0f, minSize = 20, maxSize = 53, lore = "무리지어 다니며 바다 생태계의 중요한 고리." });
+        fishs.Add(new Fish { name = "숭어", difficulty = 1, price = 10.0f, minSize = 20, maxSize = 58, lore = "담수와 해수를 오가는 적응력이 뛰어난 물고기." });
+        fishs.Add(new Fish { name = "장어", difficulty = 3, price = 35.0f, minSize = 30, maxSize = 206, lore = "긴 몸을 가진 야행성 사냥꾼." });
+        fishs.Add(new Fish { name = "문어", difficulty = 4, price = 30.0f, minSize = 30, maxSize = 124, lore = "똑똑한 두뇌와 팔로 적을 교묘히 제압한다." });
+        fishs.Add(new Fish { name = "붉은 퉁돔", difficulty = 1, price = 9.0f, minSize = 20, maxSize = 66, lore = "맑은 바다에서 자라는 소박한 맛의 생선." });
+        fishs.Add(new Fish { name = "오징어", difficulty = 4, price = 30.0f, minSize = 30, maxSize = 124, lore = "순발력과 잽싸기로 바다에서 살아남는 자." });
+        fishs.Add(new Fish { name = "멸치", difficulty = 1, price = 6.0f, minSize = 3, maxSize = 43, lore = "작지만 바다의 맛을 좌우하는 중요한 재료." });
+        fishs.Add(new Fish { name = "정어리", difficulty = 1, price = 8.0f, minSize = 3, maxSize = 33, lore = "영양가 풍부한 무리 생활의 대명사." });
+        fishs.Add(new Fish { name = "바닷가재", difficulty = 1, price = 5.0f, minSize = 3, maxSize = 20, lore = "귀족 요리의 주인공, 단단한 집게발이 특징." });
+        fishs.Add(new Fish { name = "날개다랑어", difficulty = 1, price = 10.0f, minSize = 51, maxSize = 104, lore = "빠른 속도로 바다를 가르는 다랑어의 변종." });
+        fishs.Add(new Fish { name = "조개", difficulty = 1, price = 3.0f, minSize = 2, maxSize = 5, lore = "조용히 바다 바닥에서 자라는 해산물." });
+        fishs.Add(new Fish { name = "쓰레기", difficulty = 1, price = 0.0f, minSize = 1, maxSize = 5, lore = "바다의 불청객, 조심히 처리해야 한다." });
+        fishs.Add(new Fish { name = "해초", difficulty = 1, price = 1.0f, minSize = 1, maxSize = 5, lore = "바다의 산소를 만드는 중요한 식물." });
+        fishs.Add(new Fish { name = "전설의 물고기", difficulty = 5, price = 50.0f, minSize = 10, maxSize = 50, lore = "오래된 전설 속에만 존재한다는 신비로운 생명체." });
     }
+
     public Fish GetRandomFish()
     {
         return fishs[Random.Range(0, fishs.Count)];
@@ -159,7 +226,12 @@ public class GameManager : MonoBehaviour
 
     public void ClickBagExitButton()
     {
+        itemInfoLoreText.enabled = false;
+        itemInfoImage.enabled = false;
+        itemInfoNameText.enabled = false;
         invUI.SetActive(false);
+        sellButton.SetActive(false);
+        selectedItem = null;
     }
 
     public void WriteLog(string Log)
@@ -168,11 +240,89 @@ public class GameManager : MonoBehaviour
         StartCoroutine(RemoveLog());
     }
 
+    public void ItemInfo(InventoryItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+        selectedItem = item;
+        if (item.fishData != null)
+        {
+            itemInfoImage.sprite = GetItemIcon(item.fishData.name);
+            itemInfoNameText.text = item.fishData.name;
+            itemInfoLoreText.text = item.fishData.lore;
+        }
+        else if (item.cropData != null)
+        {
+            itemInfoImage.sprite = GetItemIcon(item.cropData.name);
+            itemInfoNameText.text = item.cropData.name;
+            itemInfoLoreText.text = item.cropData.lore;
+        }
+        itemInfoImage.enabled = true;
+        itemInfoNameText.enabled = true;
+        itemInfoLoreText.enabled = true;
+    }
+
     IEnumerator RemoveLog()
     {
         yield return new WaitForSeconds(3);
         logText.text = "";
     }
 
+    public void OpenShop(string shop)
+    {
+        if (shop == "Buy") //구매 상점
+        {
 
+        }
+        else if (shop == "Sell") //판매 상점
+        {
+            ClickBagButton();
+            sellButton.SetActive(true);
+        }
+    }
+
+    public void UpdateMoney(float plusMoney)
+    {
+        money += plusMoney;
+        moneyText.text = money + " 원";
+    }
+
+    public void SellItem()
+    {
+        if (selectedItem == null)
+        {
+            WriteLog("판매할 아이템을 선택해주세요.");
+            return;
+        }
+
+        string name = "";
+        float price = 0;
+
+        //아이템 정보 불러오기
+        if (selectedItem.fishData != null)
+        {
+            name = selectedItem.fishData.name;
+            price = selectedItem.fishData.price;
+        }
+        else if (selectedItem.cropData != null)
+        {
+            name = selectedItem.cropData.name;
+            price = selectedItem.cropData.price;
+        }
+
+        // 아이템 하나 제거
+        selectedItem.count--;
+        if (selectedItem.count <= 0)
+        {
+
+            inventory.Remove(selectedItem);
+            selectedItem = null;
+            UpdateMoney(price);
+        }
+
+        UpdateInventoryUI();
+        WriteLog($"{name}을(를) {price}원에 판매했습니다.");
+    }
 }
