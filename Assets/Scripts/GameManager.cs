@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Bson;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -56,7 +57,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject invUI;
     [SerializeField] GameObject fishGameUI;
     [SerializeField] TextMeshProUGUI logText;
-
+    [SerializeField] GameObject buyShopUI;
     //상점
     [SerializeField] GameObject sellButton;
     private InventoryItem selectedItem = null;
@@ -234,6 +235,11 @@ public class GameManager : MonoBehaviour
         selectedItem = null;
     }
 
+    public void ClickShopExitButton()
+    {
+        buyShopUI.SetActive(false);
+    }
+
     public void WriteLog(string Log)
     {
         logText.text = Log;
@@ -274,7 +280,7 @@ public class GameManager : MonoBehaviour
     {
         if (shop == "Buy") //구매 상점
         {
-
+            buyShopUI.SetActive(true);
         }
         else if (shop == "Sell") //판매 상점
         {
@@ -287,6 +293,30 @@ public class GameManager : MonoBehaviour
     {
         money += plusMoney;
         moneyText.text = money + " 원";
+    }
+
+    public void BuySeed()
+    {
+        if (money >= 7)
+        {
+            UpdateMoney(-7);
+            WriteLog("씨앗을 구매했습니다.");
+            //씨앗 1개 지급
+            Crop seed = null;
+            foreach (Crop crop in GameManager.Instance.crops)
+            {
+                if (crop.name == "씨앗")
+                {
+                    seed = crop;
+                    break;
+                }
+            }
+            AddToInventory(seed);
+        }
+        else
+        {
+            WriteLog("돈이 부족합니다.");
+        }
     }
 
     public void SellItem()
@@ -312,6 +342,7 @@ public class GameManager : MonoBehaviour
             price = selectedItem.cropData.price;
         }
 
+        UpdateMoney(price);
         // 아이템 하나 제거
         selectedItem.count--;
         if (selectedItem.count <= 0)
@@ -319,7 +350,7 @@ public class GameManager : MonoBehaviour
 
             inventory.Remove(selectedItem);
             selectedItem = null;
-            UpdateMoney(price);
+            
         }
 
         UpdateInventoryUI();

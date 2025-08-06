@@ -41,6 +41,8 @@ public class Player : MonoBehaviour
     [SerializeField] AnimationClip[] ani;
     SpriteRenderer sr;
 
+    public int clothIndex = 0;
+
     Coroutine coru;
 
     public Tilemap groundTilemap;
@@ -66,7 +68,7 @@ public class Player : MonoBehaviour
                 fishingRod.SetActive(true);
 
                 isNowFishing = true;
-                sr.sprite = sprites[4];
+                sr.sprite = sprites[16];
 
                 coru = StartCoroutine(WaitFish());
             }
@@ -184,19 +186,19 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) //위
         {
-            sr.sprite = sprites[3];
+            sr.sprite = sprites[clothIndex * 4 + 3];
         }
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) //아래
         {
-            sr.sprite = sprites[0];
+            sr.sprite = sprites[clothIndex * 4 + 0];
         }
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) //오른
         {
-            sr.sprite = sprites[2];
+            sr.sprite = sprites[clothIndex * 4 + 2];
         }
         else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) //왼
         {
-            sr.sprite = sprites[1];
+            sr.sprite = sprites[clothIndex * 4 + 1];
         }
     }
 
@@ -225,7 +227,6 @@ public class Player : MonoBehaviour
             }
             else if (collision.name == "Buy")
             {
-                Debug.Log("test");
                 GameManager.Instance.OpenShop("Buy");
             }
             else if (collision.name == "Sell")
