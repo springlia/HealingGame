@@ -16,10 +16,6 @@ public class FishingGame : MonoBehaviour
     float randomSize;
     Fish caughtFish;
 
-    //물고기 데이터 가져오기
-    //[SerializeField] private List<FishData> fishDatas;
-    //[SerializeField] private GameObject fishPrefab;
-
     private void OnEnable()
     {
         caughtFish = GameManager.Instance.GetRandomFish();

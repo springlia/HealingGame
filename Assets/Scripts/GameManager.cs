@@ -225,7 +225,6 @@ public class GameManager : MonoBehaviour
         fishs.Add(new Fish { name = "해초", difficulty = 1, price = 1.0f, minSize = 1, maxSize = 5, lore = "바다의 산소를 만드는 중요한 식물." });
         fishs.Add(new Fish { name = "전설의 물고기", difficulty = 5, price = 50.0f, minSize = 10, maxSize = 50, lore = "오래된 전설 속에만 존재한다는 신비로운 생명체." });
     }
-
     public Fish GetRandomFish()
     {
         return fishs[Random.Range(0, fishs.Count)];
@@ -263,12 +262,6 @@ public class GameManager : MonoBehaviour
         clothShopUI.SetActive(false);
     }
 
-    public void WriteLog(string Log)
-    {
-        logText.text = Log;
-        StartCoroutine(RemoveLog());
-    }
-
     public void ItemInfo(InventoryItem item)
     {
         if (item == null)
@@ -293,13 +286,20 @@ public class GameManager : MonoBehaviour
         itemInfoLoreText.enabled = true;
     }
 
+    //로그 표기 함수
+    public void WriteLog(string Log)
+    {
+        logText.text = Log;
+        StartCoroutine(RemoveLog());
+    }
+
     IEnumerator RemoveLog()
     {
         yield return new WaitForSeconds(3);
         logText.text = "";
     }
 
-    public void UpdateMoney(float plusMoney)
+    public void UpdateMoney(float plusMoney) //돈 업데이트
     {
         money += plusMoney;
         moneyText.text = money + " 원";
@@ -311,7 +311,7 @@ public class GameManager : MonoBehaviour
         {
             UpdateMoney(-7);
             WriteLog("씨앗을 구매했습니다.");
-            //씨앗 1개 지급
+            //초기 씨앗 1개 지급
             Crop seed = null;
             foreach (Crop crop in GameManager.Instance.crops)
             {
@@ -383,10 +383,11 @@ public class GameManager : MonoBehaviour
         selectedItem.count--;
         if (selectedItem.count <= 0)
         {
-
             inventory.Remove(selectedItem);
             selectedItem = null;
-            
+            itemInfoImage.enabled = false;
+            itemInfoLoreText.enabled = false;
+            itemInfoNameText.enabled = false;
         }
 
         UpdateInventoryUI();
@@ -453,5 +454,15 @@ public class GameManager : MonoBehaviour
         {
             optionUI.SetActive(true);
         }
+    }
+
+    public void GameExit()
+    {
+        //이것저것 저장하기 PlayerPrefs
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 }
