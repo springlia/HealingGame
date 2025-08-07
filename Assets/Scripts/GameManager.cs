@@ -1,10 +1,10 @@
 using Newtonsoft.Json.Bson;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
 [System.Serializable]
@@ -31,6 +31,18 @@ public class InventoryItem
     public Fish fishData;
     public Crop cropData;
     public int count;
+}
+
+[System.Serializable]
+public class InventoryWrapper
+{
+    public List<InventoryItem> inventory;
+}
+
+[System.Serializable]
+public class TileMapWrapper
+{
+    public List<string> tileNames;
 }
 
 public class GameManager : MonoBehaviour
@@ -73,6 +85,7 @@ public class GameManager : MonoBehaviour
     public GameObject buyShopUI;
     [SerializeField] GameObject closetUI;
     public GameObject clothShopUI;
+    [SerializeField] GameObject itemInfoUI;
 
     [SerializeField] GameObject optionUI;
 
@@ -85,6 +98,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject player;
     Player p;
 
+    //사운드
+    public AudioClip walking;
+    public AudioClip farming;
+    public AudioClip fishing;
+    public AudioClip shopping;
+    public AudioClip hoeing;
+    public AudioClip no;
+    public AudioSource audioSource;
+    AudioSource bgmAudio;
+
     private void Awake()
     {
         Instance = this;
@@ -92,6 +115,8 @@ public class GameManager : MonoBehaviour
         p = player.GetComponent<Player>();
         AddFish();
         AddCrop();
+        LoadGameData();
+        audioSource = GetComponent<AudioSource>();
     }
 
     private void Start()
@@ -102,17 +127,26 @@ public class GameManager : MonoBehaviour
             slotUIs.Add(slotObj.GetComponent<InventorySlot>());
         }
 
-        //씨앗 1개 지급
-        Crop seed = null;
-        foreach (Crop crop in GameManager.Instance.crops)
+        // 저장된 게임이 없다면 최초 시작으로 판단
+        if (!PlayerPrefs.HasKey("hasStarted"))
         {
-            if (crop.name == "씨앗")
+            // 씨앗 1개 지급
+            Crop seed = null;
+            foreach (Crop crop in GameManager.Instance.crops)
             {
-                seed = crop;
-                break;
+                if (crop.name == "씨앗")
+                {
+                    seed = crop;
+                    break;
+                }
             }
+            AddToInventory(seed);
+
+            // 최초 시작 마크 저장
+            PlayerPrefs.SetInt("hasStarted", 1);
+            PlayerPrefs.Save();
         }
-        AddToInventory(seed);
+
     }
 
     //인벤토리 아이템 추가 (농사류)
@@ -135,8 +169,35 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            PlaySound("NO");
             WriteLog("인벤토리가 가득 찼습니다.");
         }
+    }
+
+    public void PlaySound(string action)
+    {
+        switch (action)
+        {
+            case "WALK":
+                audioSource.clip = walking;
+                break;
+            case "FARM":
+                audioSource.clip = farming;
+                break;
+            case "FISH":
+                audioSource.clip = fishing;
+                break;
+            case "SHOP":
+                audioSource.clip = shopping;
+                break;
+            case "HOE":
+                audioSource.clip = hoeing;
+                break;
+            case "NO":
+                audioSource.clip = no;
+                break;
+        }
+        audioSource.Play();
     }
 
     //인벤토리 아이템 추가 (낚시류)
@@ -246,9 +307,7 @@ public class GameManager : MonoBehaviour
 
     public void ClickBagExitButton()
     {
-        itemInfoLoreText.enabled = false;
-        itemInfoImage.enabled = false;
-        itemInfoNameText.enabled = false;
+        itemInfoUI.SetActive(false);
         closetUI.SetActive(false);
         
         invUI.SetActive(false);
@@ -281,9 +340,7 @@ public class GameManager : MonoBehaviour
             itemInfoNameText.text = item.cropData.name;
             itemInfoLoreText.text = item.cropData.lore;
         }
-        itemInfoImage.enabled = true;
-        itemInfoNameText.enabled = true;
-        itemInfoLoreText.enabled = true;
+        itemInfoUI.SetActive(true);
     }
 
     //로그 표기 함수
@@ -311,6 +368,7 @@ public class GameManager : MonoBehaviour
         {
             UpdateMoney(-7);
             WriteLog("씨앗을 구매했습니다.");
+            PlaySound("SHOP");
             //초기 씨앗 1개 지급
             Crop seed = null;
             foreach (Crop crop in GameManager.Instance.crops)
@@ -325,6 +383,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            PlaySound("NO");
             WriteLog("돈이 부족합니다.");
         }
     }
@@ -337,6 +396,7 @@ public class GameManager : MonoBehaviour
             UpdateMoney(-Lv2UpPrice);
             buyFishRodButtonText.text = $"\n\n\n\n\n낚싯대 업그레이드\n현재: Lv{fishRodLv}\n{Lv3UpPrice}";
             WriteLog("낚싯대 레벨이 올랐습니다!");
+            PlaySound("SHOP");
         }
         else if (fishRodLv == 2 && money >= Lv3UpPrice)
         {
@@ -344,14 +404,17 @@ public class GameManager : MonoBehaviour
             UpdateMoney(-Lv3UpPrice);
             buyFishRodButtonText.text = $"\n\n\n\n\n낚싯대 업그레이드\n현재: {fishRodLv}";
             WriteLog("낚싯대 레벨이 올랐습니다!");
+            PlaySound("SHOP");
         }
         else if (fishRodLv == 3)
         {
             WriteLog("이미 최대 레벨의 낚시대입니다.");
+            PlaySound("NO");
         }
         else
         {
             WriteLog("돈이 부족합니다.");
+            PlaySound("NO");
         }
     }
 
@@ -360,6 +423,7 @@ public class GameManager : MonoBehaviour
         if (selectedItem == null)
         {
             WriteLog("판매할 아이템을 선택해주세요.");
+            PlaySound("NO");
             return;
         }
 
@@ -379,19 +443,19 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateMoney(price);
+        PlaySound("SHOP");
         // 아이템 하나 제거
         selectedItem.count--;
         if (selectedItem.count <= 0)
         {
             inventory.Remove(selectedItem);
             selectedItem = null;
-            itemInfoImage.enabled = false;
-            itemInfoLoreText.enabled = false;
-            itemInfoNameText.enabled = false;
+            itemInfoUI.SetActive(false);
         }
 
         UpdateInventoryUI();
         WriteLog($"{name}을(를) {price}원에 판매했습니다.");
+        PlaySound("SHOP");
     }
 
     public void OpenCloset()
@@ -413,11 +477,13 @@ public class GameManager : MonoBehaviour
         {
             clothIndex = cloth;
             WriteLog("의상 변경 완료!");
+            PlaySound("SHOP");
             p.ChangeClothNow();
         }
         else
         {
             WriteLog("보유하고 있지 않은 의상입니다.");
+            PlaySound("NO");
         }
         
     }
@@ -427,11 +493,13 @@ public class GameManager : MonoBehaviour
         if (clothUnlock[cloth])
         {
             WriteLog("이미 보유하고 있는 의상입니다.");
+            PlaySound("NO");
             return;
         }
         if (money >= clothPrice)
         {
             WriteLog("의상 구매 완료!");
+            PlaySound("SHOP");
             cloths[cloth].color = Color.white; //옷장에서 잠금해제
             clothUnlock[cloth] = true;
             UpdateMoney(-clothPrice);
@@ -440,6 +508,7 @@ public class GameManager : MonoBehaviour
         else
         {
             WriteLog("돈이 부족합니다.");
+            PlaySound("NO");
         }
         
     }
@@ -456,13 +525,103 @@ public class GameManager : MonoBehaviour
         }
     }
 
+
+    void SaveGameData()
+    {
+        // 기본 데이터 저장
+        PlayerPrefs.SetInt("clothIndex", clothIndex);
+        PlayerPrefs.SetFloat("money", money);
+        PlayerPrefs.SetInt("fishRodLv", fishRodLv);
+
+        // 의상 해금 정보 저장
+        for (int i = 0; i < clothUnlock.Length; i++)
+        {
+            PlayerPrefs.SetInt($"clothUnlock_{i}", clothUnlock[i] ? 1 : 0);
+        }
+
+        // 인벤토리 저장 (JSON 직렬화)
+        string invJson = JsonUtility.ToJson(new InventoryWrapper { inventory = inventory });
+        PlayerPrefs.SetString("inventory", invJson);
+
+        // 플레이어 위치 저장
+        Vector3 pos = player.transform.position;
+        PlayerPrefs.SetFloat("playerPosX", pos.x);
+        PlayerPrefs.SetFloat("playerPosY", pos.y);
+        PlayerPrefs.SetFloat("playerPosZ", pos.z);
+
+        // 농장 타일맵 저장 (간단하게 타일 이름만 저장하는 예)
+        List<string> tileNames = new List<string>();
+        BoundsInt bounds = p.groundTilemap.cellBounds;
+        foreach (Vector3Int posTile in bounds.allPositionsWithin)
+        {
+            TileBase tile = p.groundTilemap.GetTile(posTile);
+            tileNames.Add(tile != null ? tile.name : "null");
+        }
+        PlayerPrefs.SetString("groundTilemap", JsonUtility.ToJson(new TileMapWrapper { tileNames = tileNames }));
+
+        PlayerPrefs.Save();
+    }
+    void LoadGameData()
+    {
+        clothIndex = PlayerPrefs.GetInt("clothIndex", 0);
+        money = PlayerPrefs.GetFloat("money", 0);
+        fishRodLv = PlayerPrefs.GetInt("fishRodLv", 1);
+
+        for (int i = 0; i < clothUnlock.Length; i++)
+        {
+            clothUnlock[i] = PlayerPrefs.GetInt($"clothUnlock_{i}", 0) == 1;
+        }
+
+        // 인벤토리 로드
+        string invJson = PlayerPrefs.GetString("inventory", "");
+        if (!string.IsNullOrEmpty(invJson))
+        {
+            InventoryWrapper wrapper = JsonUtility.FromJson<InventoryWrapper>(invJson);
+            inventory = wrapper.inventory;
+        }
+
+        // 플레이어 위치
+        Vector3 pos = new Vector3(
+            PlayerPrefs.GetFloat("playerPosX", player.transform.position.x),
+            PlayerPrefs.GetFloat("playerPosY", player.transform.position.y),
+            PlayerPrefs.GetFloat("playerPosZ", player.transform.position.z));
+        player.transform.position = pos;
+
+        // 타일맵 로드
+        string tileJson = PlayerPrefs.GetString("groundTilemap", "");
+        if (!string.IsNullOrEmpty(tileJson))
+        {
+            TileMapWrapper mapWrapper = JsonUtility.FromJson<TileMapWrapper>(tileJson);
+            BoundsInt bounds = p.groundTilemap.cellBounds;
+            int i = 0;
+            foreach (Vector3Int posTile in bounds.allPositionsWithin)
+            {
+                if (i >= mapWrapper.tileNames.Count) break;
+                string tileName = mapWrapper.tileNames[i++];
+                if (tileName == "null")
+                {
+                    p.groundTilemap.SetTile(posTile, null);
+                }
+                else
+                {
+                    TileBase found = System.Array.Find(p.farmTiles, t => t.name == tileName);
+                    if (found != null)
+                        p.groundTilemap.SetTile(posTile, found);
+                }
+            }
+        }
+
+        UpdateInventoryUI();
+    }
+
     public void GameExit()
     {
+        SaveGameData();
         //이것저것 저장하기 PlayerPrefs
-        #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-        #else
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
             Application.Quit();
-        #endif
+#endif
     }
 }

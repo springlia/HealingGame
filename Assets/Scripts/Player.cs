@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -24,17 +25,8 @@ public class Player : MonoBehaviour
     public TileBase tile;
 
     public TileBase[] farmTiles;
-    public enum FarmTile
-    {
-        Normal,
-        Hoe,
-        Water,
-        Seed,
-        Lv1,
-        Lv2,
-        Lv3,
-        Finish
-    }
+
+    bool wasMoving = false;
 
     //애니메이션
     [SerializeField] Sprite[] sprites;
@@ -84,14 +76,17 @@ public class Player : MonoBehaviour
                 Vector3Int currentPos = Vector3Int.CeilToInt(this.transform.position) - Vector3Int.right - Vector3Int.up;
                 if (groundTilemap.GetTile(currentPos) == farmTiles[0]) //일반 땅 상태일때 (땅파기)
                 {
+                    GameManager.Instance.PlaySound("HOE");
                     groundTilemap.BoxFill(currentPos, farmTiles[1], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
                 }
                 else if (groundTilemap.GetTile(currentPos) == farmTiles[1]) //땅이 파진 상태일때 (물주기)
                 {
+                    GameManager.Instance.PlaySound("FISH");
                     groundTilemap.BoxFill(currentPos, farmTiles[2], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
                 }
                 else if (groundTilemap.GetTile(currentPos) == farmTiles[2]) //물이 있는 상태일때 (씨앗 뿌리기)
                 {
+
                     //씨앗이 인벤토리에 있는지
                     InventoryItem seed = null;
                     foreach (InventoryItem item in GameManager.Instance.inventory)
@@ -106,6 +101,7 @@ public class Player : MonoBehaviour
                     //씨앗이 있으면
                     if (seed != null && seed.count > 0)
                     {
+                        GameManager.Instance.PlaySound("HOE");
                         groundTilemap.BoxFill(currentPos, farmTiles[3], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
                         StartCoroutine(GrowCrop(currentPos));
 
@@ -121,6 +117,7 @@ public class Player : MonoBehaviour
                     //없으면
                     else
                     {
+                        GameManager.Instance.PlaySound("NO");
                         GameManager.Instance.WriteLog("씨앗이 부족합니다.");
                     }
 
@@ -130,6 +127,7 @@ public class Player : MonoBehaviour
                 {
                     groundTilemap.BoxFill(currentPos, farmTiles[0], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
                     GameManager.Instance.WriteLog("토마토를 수확했다!");
+                    GameManager.Instance.PlaySound("FARM");
                     Crop tomato = null;
                     foreach (Crop crop in GameManager.Instance.crops)
                     {
@@ -177,7 +175,36 @@ public class Player : MonoBehaviour
         dir.x = Input.GetAxisRaw("Horizontal");
         dir.y = Input.GetAxisRaw("Vertical");
 
-        this.transform.position += dir * speed * Time.deltaTime;
+        bool isMoving = dir != Vector3.zero;
+        transform.position += dir * speed * Time.deltaTime;
+
+        var gm = GameManager.Instance;
+
+        if (isMoving && !wasMoving)
+        {
+            if (gm.audioSource.clip != gm.walking)
+            {
+                gm.audioSource.clip = gm.walking;
+                gm.audioSource.loop = true;
+                gm.audioSource.Play();
+            }
+            else if (!gm.audioSource.isPlaying)
+            {
+                gm.audioSource.Play();
+            }
+        }
+        else if (!isMoving && wasMoving)
+        {
+            if (gm.audioSource.clip == gm.walking && gm.audioSource.isPlaying)
+            {
+                gm.audioSource.loop = false;
+                gm.audioSource.Stop();
+            }
+        }
+
+        wasMoving = isMoving;
+
+
     }
 
     public void ChangeClothNow()
@@ -190,19 +217,24 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) //위
         {
             sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 3];
+            GameManager.Instance.PlaySound("WALK");
         }
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) //아래
         {
             sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 0];
+            GameManager.Instance.PlaySound("WALK");
         }
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) //오른
         {
             sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 2];
+            GameManager.Instance.PlaySound("WALK");
         }
         else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) //왼
         {
             sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 1];
+            GameManager.Instance.PlaySound("WALK");
         }
+
     }
 
    

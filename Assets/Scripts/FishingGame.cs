@@ -47,6 +47,7 @@ public class FishingGame : MonoBehaviour
             {
                 GameManager.Instance.WriteLog($"{caughtFish.name}({randomSize.ToString("N2")}cm)을(를) 잡았다!");
                 GameManager.Instance.AddToInventory(caughtFish);
+                GameManager.Instance.PlaySound("FISH");
             }
             else
             {
