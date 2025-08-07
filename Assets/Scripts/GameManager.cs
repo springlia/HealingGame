@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,11 +42,17 @@ public class GameManager : MonoBehaviour
     public List<Fish> fishs = new List<Fish>();
     public List<Crop> crops = new List<Crop>();
 
+
+    //낚시 상점
+    public int fishRodLv = 1;
+    const int Lv2UpPrice = 100;
+    const int Lv3UpPrice = 300;
+    [SerializeField] TextMeshProUGUI buyFishRodButtonText;
+
     //인벤토리
     public List<InventoryItem> inventory = new List<InventoryItem>();
     [SerializeField] GameObject inventoryPanel;
     [SerializeField] GameObject inventorySlotPrefab;
-
     private List<InventorySlot> slotUIs = new List<InventorySlot>();
     const int InventorySize = 36;
 
@@ -53,22 +60,36 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI itemInfoNameText;
     public TextMeshProUGUI itemInfoLoreText;
 
+    //의상
+    public int clothIndex = 0;
+    [SerializeField] bool[] clothUnlock;
+    const int clothPrice = 500;
+    [SerializeField] Image[] cloths;
+
     //UI
     [SerializeField] GameObject invUI;
     [SerializeField] GameObject fishGameUI;
     [SerializeField] TextMeshProUGUI logText;
-    [SerializeField] GameObject buyShopUI;
+    public GameObject buyShopUI;
+    [SerializeField] GameObject closetUI;
+    public GameObject clothShopUI;
+
+    [SerializeField] GameObject optionUI;
+
     //상점
-    [SerializeField] GameObject sellButton;
+    public GameObject sellButton;
     private InventoryItem selectedItem = null;
 
     public float money = 0;
     [SerializeField] TextMeshProUGUI moneyText;
+    [SerializeField] GameObject player;
+    Player p;
 
     private void Awake()
     {
         Instance = this;
 
+        p = player.GetComponent<Player>();
         AddFish();
         AddCrop();
     }
@@ -124,14 +145,13 @@ public class GameManager : MonoBehaviour
         // 이미 있는 항목이면 수량만 증가
         foreach (var item in inventory)
         {
-            if (item.fishData.name == fish.name)
+            if (item.fishData != null && item.fishData.name == fish.name)
             {
                 item.count++;
                 UpdateInventoryUI();
                 return;
             }
         }
-
         // 새로 추가
         if (inventory.Count < InventorySize)
         {
@@ -230,6 +250,8 @@ public class GameManager : MonoBehaviour
         itemInfoLoreText.enabled = false;
         itemInfoImage.enabled = false;
         itemInfoNameText.enabled = false;
+        closetUI.SetActive(false);
+        
         invUI.SetActive(false);
         sellButton.SetActive(false);
         selectedItem = null;
@@ -238,6 +260,7 @@ public class GameManager : MonoBehaviour
     public void ClickShopExitButton()
     {
         buyShopUI.SetActive(false);
+        clothShopUI.SetActive(false);
     }
 
     public void WriteLog(string Log)
@@ -276,19 +299,6 @@ public class GameManager : MonoBehaviour
         logText.text = "";
     }
 
-    public void OpenShop(string shop)
-    {
-        if (shop == "Buy") //구매 상점
-        {
-            buyShopUI.SetActive(true);
-        }
-        else if (shop == "Sell") //판매 상점
-        {
-            ClickBagButton();
-            sellButton.SetActive(true);
-        }
-    }
-
     public void UpdateMoney(float plusMoney)
     {
         money += plusMoney;
@@ -312,6 +322,32 @@ public class GameManager : MonoBehaviour
                 }
             }
             AddToInventory(seed);
+        }
+        else
+        {
+            WriteLog("돈이 부족합니다.");
+        }
+    }
+
+    public void BuyFishRod()
+    {
+        if (fishRodLv == 1 && money >= Lv2UpPrice)
+        {
+            fishRodLv++;
+            UpdateMoney(-Lv2UpPrice);
+            buyFishRodButtonText.text = $"\n\n\n\n\n낚싯대 업그레이드\n현재: Lv{fishRodLv}\n{Lv3UpPrice}";
+            WriteLog("낚싯대 레벨이 올랐습니다!");
+        }
+        else if (fishRodLv == 2 && money >= Lv3UpPrice)
+        {
+            fishRodLv++;
+            UpdateMoney(-Lv3UpPrice);
+            buyFishRodButtonText.text = $"\n\n\n\n\n낚싯대 업그레이드\n현재: {fishRodLv}";
+            WriteLog("낚싯대 레벨이 올랐습니다!");
+        }
+        else if (fishRodLv == 3)
+        {
+            WriteLog("이미 최대 레벨의 낚시대입니다.");
         }
         else
         {
@@ -355,5 +391,67 @@ public class GameManager : MonoBehaviour
 
         UpdateInventoryUI();
         WriteLog($"{name}을(를) {price}원에 판매했습니다.");
+    }
+
+    public void OpenCloset()
+    {
+        for (int i = 1; i < 4; i++)
+        {
+            if (!clothUnlock[i])
+            {
+                cloths[i].color = Color.gray;
+            }
+        }
+        closetUI.SetActive(true);
+    }
+
+    //옷 변경 함수
+    public void ChangeCloth(int cloth)
+    {
+        if (clothUnlock[cloth])
+        {
+            clothIndex = cloth;
+            WriteLog("의상 변경 완료!");
+            p.ChangeClothNow();
+        }
+        else
+        {
+            WriteLog("보유하고 있지 않은 의상입니다.");
+        }
+        
+    }
+
+    public void BuyCloth(int cloth)
+    {
+        if (clothUnlock[cloth])
+        {
+            WriteLog("이미 보유하고 있는 의상입니다.");
+            return;
+        }
+        if (money >= clothPrice)
+        {
+            WriteLog("의상 구매 완료!");
+            cloths[cloth].color = Color.white; //옷장에서 잠금해제
+            clothUnlock[cloth] = true;
+            UpdateMoney(-clothPrice);
+            
+        }
+        else
+        {
+            WriteLog("돈이 부족합니다.");
+        }
+        
+    }
+
+    public void ClickOptionButton(string option)
+    {
+        if (option == "Exit") //옵션버튼 닫기
+        {
+            optionUI.SetActive(false);
+        }
+        if (option == "Open") //옵션버튼 열기
+        {
+            optionUI.SetActive(true);
+        }
     }
 }

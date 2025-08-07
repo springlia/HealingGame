@@ -41,8 +41,6 @@ public class Player : MonoBehaviour
     [SerializeField] AnimationClip[] ani;
     SpriteRenderer sr;
 
-    public int clothIndex = 0;
-
     Coroutine coru;
 
     public Tilemap groundTilemap;
@@ -182,26 +180,32 @@ public class Player : MonoBehaviour
         this.transform.position += dir * speed * Time.deltaTime;
     }
 
+    public void ChangeClothNow()
+    {
+        sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 0];
+    }
+
     void PlayerLook()
     {
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) //위
         {
-            sr.sprite = sprites[clothIndex * 4 + 3];
+            sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 3];
         }
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) //아래
         {
-            sr.sprite = sprites[clothIndex * 4 + 0];
+            sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 0];
         }
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) //오른
         {
-            sr.sprite = sprites[clothIndex * 4 + 2];
+            sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 2];
         }
         else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) //왼
         {
-            sr.sprite = sprites[clothIndex * 4 + 1];
+            sr.sprite = sprites[GameManager.Instance.clothIndex * 4 + 1];
         }
     }
 
+   
     IEnumerator WaitFish()
     {
         yield return new WaitForSeconds(Random.Range(2f, 10f));
@@ -227,11 +231,16 @@ public class Player : MonoBehaviour
             }
             else if (collision.name == "Buy")
             {
-                GameManager.Instance.OpenShop("Buy");
+                GameManager.Instance.buyShopUI.SetActive(true);
             }
             else if (collision.name == "Sell")
             {
-                GameManager.Instance.OpenShop("Sell");
+                GameManager.Instance.ClickBagButton();
+                GameManager.Instance.sellButton.SetActive(true);
+            }
+            else if (collision.name == "Cloth")
+            {
+                GameManager.Instance.clothShopUI.SetActive(true);
             }
                 
         }

@@ -66,7 +66,7 @@ public class FishingGame : MonoBehaviour
     {
         float xPos = Random.Range(-425.0f, 425.0f);
         target.transform.localPosition = new Vector3 (xPos, -150, 0);
-        float width = Random.Range(0.5f, 1.1f);
+        float width = Random.Range(0.3f, 0.8f) + GameManager.Instance.fishRodLv * 0.2f;
         target.transform.localScale = new Vector3(width, 1);
         
     }
