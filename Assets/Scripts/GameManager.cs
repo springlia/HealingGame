@@ -45,6 +45,7 @@ public class TileMapWrapper
     public List<string> tileNames;
 }
 
+
 public class GameManager : MonoBehaviour
 {
     //ΩÃ±€≈Ê
@@ -241,7 +242,6 @@ public class GameManager : MonoBehaviour
                 {
                     name = inventory[i].cropData.name;
                 }
-
                 itemIcon = GetItemIcon(name);
                 slotUIs[i].AddItem(itemIcon, inventory[i].count, inventory[i]);
             }

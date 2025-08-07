@@ -170,6 +170,44 @@ public class Player : MonoBehaviour
         groundTilemap.BoxFill(crop, farmTiles[7], crop.x, crop.y, crop.x, crop.y); //성장완
     }
 
+    IEnumerator ResumGrowCrop(Vector3Int crop, int stage)
+    {
+        if (stage == 0)
+        {
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[4], crop.x, crop.y, crop.x, crop.y); //1단계
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[5], crop.x, crop.y, crop.x, crop.y); //2단계
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[6], crop.x, crop.y, crop.x, crop.y); //3단계
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[7], crop.x, crop.y, crop.x, crop.y); //성장완
+        }
+        else if (stage == 1)
+        {
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[5], crop.x, crop.y, crop.x, crop.y); //2단계
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[6], crop.x, crop.y, crop.x, crop.y); //3단계
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[7], crop.x, crop.y, crop.x, crop.y); //성장완
+        }
+        else if (stage == 2)
+        {
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[6], crop.x, crop.y, crop.x, crop.y); //3단계
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[7], crop.x, crop.y, crop.x, crop.y); //성장완
+        }
+        else if (stage == 3)
+        {
+            yield return new WaitForSeconds(Random.Range(2, 10));
+            groundTilemap.BoxFill(crop, farmTiles[7], crop.x, crop.y, crop.x, crop.y); //성장완
+        }
+        
+    }
+
+
     void PlayerMove()
     {
         dir.x = Input.GetAxisRaw("Horizontal");
