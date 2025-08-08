@@ -322,7 +322,6 @@ public class GameManager : MonoBehaviour
             UpdateMoney(-7);
             WriteLog("¾¾¾ÑÀ» ±¸¸ÅÇß½À´Ï´Ù.");
             PlaySound("SHOP");
-            //ÃÊ±â ¾¾¾Ñ 1°³ Áö±Þ
             Item seed = null;
             foreach (Item item in GameManager.Instance.items)
             {
