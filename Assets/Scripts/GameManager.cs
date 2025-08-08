@@ -243,7 +243,7 @@ public class GameManager : MonoBehaviour
         items.Add(new Item { name = "해초", difficulty = 1, price = 1.0f, minSize = 1, maxSize = 5, lore = "바다의 산소를 만드는 중요한 식물." });
         items.Add(new Item { name = "전설의 물고기", difficulty = 5, price = 50.0f, minSize = 10, maxSize = 50, lore = "오래된 전설 속에만 존재한다는 신비로운 생명체." });
         items.Add(new Item { name = "씨앗", difficulty = 0, price = 5.0f, minSize = 0, maxSize = 0, lore = "이렇게 작은 씨앗이 어떻게 자라날까요?" });
-        items.Add(new Item { name = "토마토", difficulty = 0, price = 35.0f, minSize = 0, maxSize = 0, lore = "달콤하면서도 새콤한 맛이 조화를 이루는 인기 만점의 채소." });
+        items.Add(new Item { name = "토마토", difficulty = 0, price = 15.0f, minSize = 0, maxSize = 0, lore = "달콤하면서도 새콤한 맛이 조화를 이루는 인기 만점의 채소." });
     }
     public Item GetRandomFish()
     {
