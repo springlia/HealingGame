@@ -40,6 +40,8 @@ public class Player : MonoBehaviour
     private void Start()
     {
         sr = GetComponent<SpriteRenderer>();
+
+        ChangeClothNow();
     }
 
     void Update()
@@ -91,7 +93,7 @@ public class Player : MonoBehaviour
                     InventoryItem seed = null;
                     foreach (InventoryItem item in GameManager.Instance.inventory)
                     {
-                        if (item.cropData.name == "씨앗")
+                        if (item.itemData.name == "씨앗")
                         {
                             seed = item;
                             break;
@@ -128,8 +130,8 @@ public class Player : MonoBehaviour
                     groundTilemap.BoxFill(currentPos, farmTiles[0], currentPos.x, currentPos.y, currentPos.x, currentPos.y);
                     GameManager.Instance.WriteLog("토마토를 수확했다!");
                     GameManager.Instance.PlaySound("FARM");
-                    Crop tomato = null;
-                    foreach (Crop crop in GameManager.Instance.crops)
+                    Item tomato = null;
+                    foreach (Item crop in GameManager.Instance.items)
                     {
                         if (crop.name == "토마토")
                         {
@@ -169,8 +171,30 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(Random.Range(2, 10));
         groundTilemap.BoxFill(crop, farmTiles[7], crop.x, crop.y, crop.x, crop.y); //성장완
     }
+    public void ResumeCropsAfterLoad()
+    {
+        BoundsInt bounds = groundTilemap.cellBounds;
 
-    IEnumerator ResumGrowCrop(Vector3Int crop, int stage)
+        foreach (Vector3Int pos in bounds.allPositionsWithin)
+        {
+            TileBase tile = groundTilemap.GetTile(pos);
+            if (tile == null) continue;
+
+            // 단계 매핑: [3]=씨앗 심음(0단계부터 재개), [4]=1단계, [5]=2단계, [6]=3단계
+            int stage = -1;
+            if (tile == farmTiles[3]) stage = 0;
+            else if (tile == farmTiles[4]) stage = 1;
+            else if (tile == farmTiles[5]) stage = 2;
+            else if (tile == farmTiles[6]) stage = 3;
+
+            if (stage != -1)
+            {
+                StartCoroutine(ResumGrowCrop(pos, stage));
+            }
+        }
+    }
+
+    public IEnumerator ResumGrowCrop(Vector3Int crop, int stage)
     {
         if (stage == 0)
         {

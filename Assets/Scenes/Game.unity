@@ -42988,7 +42988,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97a2d8c9c41238c44b436585fb217bc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fishs: []
+  items: []
   fishRodLv: 1
   buyFishRodButtonText: {fileID: 359580212}
   inventory: []

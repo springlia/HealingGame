@@ -14,7 +14,7 @@ public class FishingGame : MonoBehaviour
     Vector3 fishDir = Vector3.right;
     bool canCatch;
     float randomSize;
-    Fish caughtFish;
+    Item caughtFish;
 
     private void OnEnable()
     {
